@@ -1,7 +1,12 @@
 
 
-module.exports = function (flights) {
+module.exports = function (flights, db) {
   var express = require('express');
+  var session = require('express-session');
+  var MongoStore = require('connect-mongo')(session);
+  var connect = require('connect');
+  
+
   var path = require('path');
   var favicon = require('serve-favicon');
   var logger = require('morgan');
@@ -18,6 +23,15 @@ module.exports = function (flights) {
   // uncomment after placing your favicon in /public
   //app.use(favicon(__dirname + '/public/favicon.ico'));
   app.use(logger('dev'));
+  app.use(cookieParser());
+  app.use(session({
+    secret: 'keyboard cat',
+    store: new MongoStore({
+      mongooseConnection: db
+    }),
+    resave: false,
+    saveUninitialized: true
+  }));
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: false }));
   app.use(cookieParser());
@@ -31,7 +45,7 @@ module.exports = function (flights) {
   app.get('/flight/:number', routes.flight);
   app.put('/flight/:number/arrived', routes.arrived);
   app.get('/list', routes.list);
-  app.get('/list/json', routes.listjson);
+  app.get('/arrivals', routes.arrivals);
 
   // catch 404 and forward to error handler
   app.use(function(req, res, next) {

@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 
+var FlightSchema = require('../schemas/flight');
 
 module.exports = function (flights) {
 	var flight = require('../flight');
@@ -12,7 +13,9 @@ module.exports = function (flights) {
 	var functions = {};
 
 	functions.flight = function(req, res) {
-		var number = req.param('number');
+		var number = req.params.number;
+
+		req.session.lastNumber = number;
 
 		if (typeof flights[number] === 'undefined') {
 			res.status(404).json({status: 'error'});
@@ -22,13 +25,27 @@ module.exports = function (flights) {
 	};
 
 	functions.arrived = function(req, res) {
-		var number = req.param('number');
+		var number = req.params.number;
 
 		if (typeof flights[number] === 'undefined') {
 			res.status(404).json({status: 'error'});
 		} else {
 			flights[number].triggerArrive();
-			res.json({status: 'done'});
+
+			var record = new FlightSchema(
+				flights[number].getInformation()
+			);
+
+			record.save(function(err) {
+				if (err) {
+					console.log(err);
+					res.status(500).json({status: 'failure'});
+				} else {
+					res.json({status: 'success'});
+				}
+			});
+
+			// res.json({status: 'done'});
 		}
 	};
 
@@ -39,13 +56,21 @@ module.exports = function (flights) {
 		});
 	};
 
-	functions.listjson = function (req, res) {
-		var flightData = [];
-		for (var number in flights) {
-			flightData.push(flights[number].getInformation());
-		}
-
-		res.json(flightData);
+	functions.arrivals = function(req, res) {
+		FlightSchema.find()
+		.setOptions({sort: 'actualArrive'})
+		.exec(function(err, arrivals) {
+			if (err) {
+				console.log(err);
+				res.status(500).json({status: 'failure'});
+			} else {
+				res.render('arrivals', {
+					title: 'Arrivals',
+					arrivals: arrivals,
+					lastNumber: req.session.lastNumber
+				});
+			};
+		});
 	};
 
 	/* GET home page. */
