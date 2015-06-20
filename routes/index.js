@@ -30,6 +30,22 @@ exports.arrived = function(req, res) {
 	}
 };
 
+exports.list = function (req, res) {
+	res.render('list', {
+		title: 'All Flights',
+		flights: flights
+	});
+};
+
+exports.listjson = function (req, res) {
+	var flightData = [];
+	for (var number in flights) {
+		flightData.push(flights[number].getInformation());
+	}
+
+	res.json(flightData);
+};
+
 /* GET home page. */
 // router.get('/', function(req, res, next) {
 //   res.render('index', { title: 'Express' });
