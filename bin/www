@@ -4,9 +4,11 @@
  * Module dependencies.
  */
 
-var app = require('../app');
+
 var debug = require('debug')('airline:server');
 var http = require('http');
+var flights = require('../data');
+var app = require('../app')(flights);
 
 /**
  * Get port from environment and store in Express.
