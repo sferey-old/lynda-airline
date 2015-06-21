@@ -5,6 +5,7 @@ module.exports = function (flights, db) {
   var session = require('express-session');
   var MongoStore = require('connect-mongo')(session);
   var connect = require('connect');
+  var passport = require('./auth');
   
 
   var path = require('path');
@@ -32,6 +33,8 @@ module.exports = function (flights, db) {
     resave: false,
     saveUninitialized: true
   }));
+  app.use(passport.initialize());
+  app.use(passport.session());
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: false }));
   app.use(cookieParser());
@@ -46,6 +49,13 @@ module.exports = function (flights, db) {
   app.put('/flight/:number/arrived', routes.arrived);
   app.get('/list', routes.list);
   app.get('/arrivals', routes.arrivals);
+  app.get('/login', routes.login);
+  app.post('/login', passport.authenticate('local', {
+    failureRedirect: '/login',
+    successRedirect: '/user'
+  }));
+  app.get('/user', routes.user);
+
 
   // catch 404 and forward to error handler
   app.use(function(req, res, next) {
